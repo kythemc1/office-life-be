@@ -1,4 +1,3 @@
-
 namespace OfficeLifeOnline.Api.Rooms;
 
 public sealed class RoomManager
@@ -231,6 +230,28 @@ public sealed class RoomManager
         }
     }
 
+    public PlayerInfo? GetPlayer(string connectionId)
+    {
+        lock (_lock)
+        {
+            if (!_playerRooms.TryGetValue(connectionId, out var roomId) ||
+                !_rooms.TryGetValue(roomId, out var room))
+                return null;
+
+            return room.Players.GetValueOrDefault(connectionId);
+        }
+    }
+
+    public IReadOnlyCollection<PlayerInfo> GetRoomPlayers(string roomId)
+    {
+        lock (_lock)
+        {
+            return _rooms.TryGetValue(roomId, out var room)
+                ? room.Players.Values.ToArray()
+                : [];
+        }
+    }
+
     private void EnsureCanEnterOffice(string connectionId)
     {
         if (!_playerRooms.TryGetValue(connectionId, out var currentRoomId))
@@ -299,30 +320,6 @@ public sealed class RoomManager
             Name = name;
             Type = type;
             IsPublic = isPublic;
-        }
-    }
-
-    public PlayerInfo? GetPlayer(string connectionId)
-    {
-        lock (_lock)
-        {
-            if (!_playerRooms.TryGetValue(connectionId, out var roomId) ||
-                !_rooms.TryGetValue(roomId, out var room))
-            {
-                return null;
-            }
-
-            return room.Players.GetValueOrDefault(connectionId);
-        }
-    }
-
-    public IReadOnlyCollection<PlayerInfo> GetRoomPlayers(string roomId)
-    {
-        lock (_lock)
-        {
-            return _rooms.TryGetValue(roomId, out var room)
-                ? room.Players.Values.ToArray()
-                : [];
         }
     }
 }
